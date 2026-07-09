@@ -41,18 +41,27 @@ export function OpeningSequence({ play, onComplete, children }: OpeningSequenceP
       <div ref={rightDoor} className="absolute inset-y-0 right-0 w-1/2 bg-ivory" />
 
       <div ref={curtainWrap} className="pointer-events-none absolute inset-0 opacity-0">
-        <div
-          className={`absolute inset-y-0 left-0 w-[18%] origin-top bg-gradient-to-r from-gold-light/40 to-transparent ${
-            showCurtains ? 'animate-curtainWave' : ''
-          }`}
-        />
-        <div
-          className={`absolute inset-y-0 right-0 w-[18%] origin-top bg-gradient-to-l from-gold-light/40 to-transparent ${
-            showCurtains ? 'animate-curtainWave' : ''
-          }`}
-          style={{ animationDelay: '0.6s' }}
-        />
-      </div>
+  <div
+    className={`absolute inset-y-0 left-0 w-[22%] origin-left bg-cover bg-right bg-no-repeat will-change-transform ${
+      showCurtains ? 'animate-curtainWave' : ''
+    }`}
+    style={{
+      backgroundImage: "url('/images/curtain-left.png')",
+      filter: 'drop-shadow(8px 0 20px rgba(0,0,0,0.25))',
+    }}
+  />
+
+  <div
+    className={`absolute inset-y-0 right-0 w-[22%] origin-right bg-cover bg-left bg-no-repeat will-change-transform ${
+      showCurtains ? 'animate-curtainWave' : ''
+    }`}
+    style={{
+      backgroundImage: "url('/images/curtain-right.png')",
+      filter: 'drop-shadow(-8px 0 20px rgba(0,0,0,0.25))',
+      animationDelay: '0.6s',
+    }}
+  />
+</div>
     </div>
   );
 }
