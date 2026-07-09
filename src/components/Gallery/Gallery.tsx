@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade, Pagination } from 'swiper/modules';
-import type { Swiper as SwiperType } from 'swiper';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import 'swiper/css';
@@ -76,7 +75,6 @@ interface LightboxProps {
  * above, so autoplay/pagination state never leaks between the two.
  */
 function Lightbox({ startIndex, onClose }: LightboxProps) {
-  const [swiper, setSwiper] = useState<SwiperType | null>(null);
 
   return (
     <motion.div
@@ -106,7 +104,6 @@ function Lightbox({ startIndex, onClose }: LightboxProps) {
       >
         <Swiper
           initialSlide={startIndex}
-          onSwiper={setSwiper}
           modules={[Pagination]}
           pagination={{ clickable: true }}
           className="rounded-xl [&_.swiper-pagination-bullet-active]:bg-gold"
