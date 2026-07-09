@@ -1,19 +1,52 @@
+import { useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
 interface MusicControlProps {
   isMuted: boolean;
-  onToggle: () => void;
+  volume: number;
+  onToggleMute: () => void;
+  onVolumeChange: (v: number) => void;
 }
 
-export function MusicControl({ isMuted, onToggle }: MusicControlProps) {
+export function MusicControl({ isMuted, volume, onToggleMute, onVolumeChange }: MusicControlProps) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-label={isMuted ? 'Unmute music' : 'Mute music'}
-      className="fixed right-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-gold/40 bg-ivory/70 text-gold-dark backdrop-blur-sm transition hover:bg-ivory"
+    <div
+      className="fixed right-4 top-4 z-40 flex items-center gap-2 rounded-full border border-gold/40 bg-ivory/80 px-2 py-1.5 backdrop-blur-sm transition-all"
+      style={{ width: expanded ? 148 : 40 }}
     >
-      {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-    </button>
+      <button
+        type="button"
+        onClick={onToggleMute}
+        onDoubleClick={() => setExpanded((e) => !e)}
+        aria-label={isMuted ? 'Unmute music' : 'Mute music'}
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gold-dark"
+      >
+        {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+      </button>
+
+      {expanded && (
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={isMuted ? 0 : volume}
+          onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+          className="h-1 w-full accent-gold-dark"
+          aria-label="Music volume"
+        />
+      )}
+
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        className="shrink-0 font-sans text-[9px] uppercase tracking-widest text-gold-dark/70"
+        aria-label={expanded ? 'Hide volume slider' : 'Show volume slider'}
+      >
+        {expanded ? '‹' : '›'}
+      </button>
+    </div>
   );
 }

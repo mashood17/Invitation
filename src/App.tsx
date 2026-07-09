@@ -18,7 +18,7 @@ type Stage = 'loading' | 'sealed' | 'opening' | 'revealed';
 
 function App() {
   const [stage, setStage] = useState<Stage>('loading');
-  const { unlock, toggleMute, isMuted } = useAudio(audio.src, audio.defaultVolume);
+  const { unlock, toggleMute, setVolume, isMuted, volume } = useAudio(audio.src);
 
   useEffect(() => {
     const t = setTimeout(() => setStage('sealed'), 900);
@@ -44,7 +44,12 @@ function App() {
 
       {stage === 'revealed' && (
         <>
-          <MusicControl isMuted={isMuted} onToggle={toggleMute} />
+          <MusicControl
+            isMuted={isMuted}
+            volume={volume}
+            onToggleMute={toggleMute}
+            onVolumeChange={setVolume}
+          />
           <main>
             <InvitationMessage />
             <ScratchReveal />
