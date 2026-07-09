@@ -1,0 +1,153 @@
+/* hero.css
+   Reusable Hero utility classes — replaces every inline style={} block.
+   Import once, globally, e.g. in your root layout or index.css:
+   import './hero.css';
+*/
+
+/* ---------- Text shadows (two-layer, luxury standard) ---------- */
+
+.hero-arabic-glow {
+  text-shadow:
+    0 0 14px rgba(240, 206, 126, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Bride/Groom display names */
+.hero-heading {
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.35),
+    0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+/* Translation / invitation line */
+.hero-small {
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.3),
+    0 6px 14px rgba(0, 0, 0, 0.16);
+}
+
+/* Parent names / captions */
+.hero-caption {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hero-ampersand-glow {
+  text-shadow: 0 0 10px rgba(240, 206, 126, 0.4);
+}
+
+/* ---------- Radial light behind names — off-center, like lantern light ---------- */
+
+.hero-radial-light {
+  background: radial-gradient(
+    circle at 45% 56%,
+    rgba(240, 206, 126, 0.11) 0%,
+    rgba(240, 206, 126, 0.04) 45%,
+    transparent 72%
+  );
+}
+
+/* ---------- Background layering (top darkness → warm light → neutral → bottom vignette) ---------- */
+
+.hero-overlay-top {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, transparent 30%);
+}
+
+.hero-overlay-warm {
+  background: radial-gradient(ellipse at 45% 40%, rgba(255, 235, 190, 0.05) 0%, transparent 55%);
+}
+
+.hero-overlay-neutral {
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.22) 100%);
+}
+
+.hero-overlay-bottom {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.46) 0%, transparent 32%);
+}
+
+/* ---------- Layout ---------- */
+
+.hero-content-width {
+  max-width: 560px;
+}
+
+.hero-vspace {
+  padding-block: clamp(4rem, 8vh, 7rem);
+}
+
+.hero-gap-lg {
+  gap: clamp(1.75rem, 4vh, 3rem);
+}
+
+.hero-gap-md {
+  gap: clamp(0.5rem, 1.4vh, 0.75rem);
+}
+
+/* ---------- Grain — texture overlay instead of live SVG turbulence ----------
+   Swap the url() below for a real 2–4K tileable grain WebP/PNG asset
+   (e.g. /textures/grain.webp) once available. Falls back gracefully to
+   "no grain" if the asset is missing, rather than repainting turbulence. */
+
+.hero-grain {
+  background-image: url('/textures/grain.webp');
+  background-repeat: repeat;
+  background-size: 480px 480px;
+  opacity: 0.015;
+  mix-blend-mode: overlay;
+}
+
+/* ---------- Perpetual, near-invisible "alive forever" motion ---------- */
+
+@keyframes hero-breathe-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.003);
+  }
+}
+
+.hero-breathe {
+  animation: hero-breathe-scale 18s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@keyframes hero-arabic-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.94;
+  }
+}
+
+.hero-arabic-breathe {
+  animation: hero-arabic-breathe 9s ease-in-out infinite;
+}
+
+@keyframes hero-divider-shimmer {
+  0%,
+  88%,
+  100% {
+    opacity: 0.55;
+    filter: brightness(1);
+  }
+  94% {
+    opacity: 1;
+    filter: brightness(1.4);
+  }
+}
+
+.hero-divider-shimmer {
+  animation: hero-divider-shimmer 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-breathe,
+  .hero-arabic-breathe,
+  .hero-divider-shimmer {
+    animation: none !important;
+  }
+}

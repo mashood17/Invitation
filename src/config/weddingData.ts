@@ -40,7 +40,7 @@ export const timeline = [
 ];
 
 export const audio = {
-  src: '/audio/bismillah.mp3',
+  src: '/audio/bismillah.mp4',
   title: 'Bismillah — Salim Sulaiman & Kailash Kher',
   defaultVolume: 0.5,
 };
