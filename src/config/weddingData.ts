@@ -34,16 +34,16 @@ export const event = {
 };
 
 export const rsvp = {
-  whatsappNumber: '91XXXXXXXXXX', // <-- replace with real number, no + or spaces
+  whatsappNumber: '917411785313', // <-- replace with real number, no + or spaces
   whatsappMessage: encodeURIComponent(
     "Assalamu Alaikum! I'd love to confirm my presence at Afra & Swafwan's Nikah."
   ),
-  callNumber: '+91XXXXXXXXXX',
+  callNumber: '+917411785313',
 };
 
 
 export const audio = {
-  src: '/audio/bismillah.mp4',
+  src: '/audio/bismillah.mp3',
   title: 'Bismillah — Salim Sulaiman & Kailash Kher',
   defaultVolume: 0.5,
 };
