@@ -24,10 +24,9 @@ export const fadeVariant: Variants = {
 
 /** Arabic invocation: opacity + blur in, a brief gold highlight, then settle. */
 export const arabicVariant: Variants = {
-  hidden: { opacity: 0, filter: 'blur(6px)' },
+  hidden: { opacity: 0 },
   glow: {
     opacity: 1,
-    filter: 'blur(0px)',
     textShadow: '0 0 22px rgba(240,206,126,0.65), 0 1px 3px rgba(0,0,0,0.6)',
     transition: { duration: 0.9, ease: luxuryEase },
   },
@@ -97,10 +96,9 @@ export const ampersandVariant: Variants = {
 
 /** Per-character reveal used by WriteOnText. */
 export const writeCharVariant: Variants = {
-  hidden: { opacity: 0, filter: 'blur(2.5px)', letterSpacing: '0.12em', y: 8 },
+  hidden: { opacity: 0, letterSpacing: '0.12em', y: 8 },
   visible: (delay: number = 0) => ({
     opacity: 1,
-    filter: 'blur(0px)',
     letterSpacing: '0em',
     y: 0,
     transition: { duration: 0.32, delay, ease: luxuryEase },

@@ -4,7 +4,7 @@ import { motion, useReducedMotion, type MotionValue } from 'framer-motion';
 import { heroMedia } from '@/config/weddingData';
 import './hero.css';
 
-const GRADE_FILTER = 'saturate(0.92) contrast(1.06) brightness(0.89) sepia(0.06) blur(0.3px)';
+const POSTER_FILTER = 'saturate(0.92) contrast(1.06) brightness(0.89) sepia(0.06)'; // static image only — one-time cost, safe
 
 interface HeroVideoProps {
   /** Scroll-driven parallax, slower than the text layer above it. Omit to disable. */
@@ -71,14 +71,14 @@ export function HeroVideo({ parallaxY }: HeroVideoProps) {
             loading="eager"
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
-            style={{ filter: GRADE_FILTER }}
+            style={{ filter: POSTER_FILTER }}
           />
 
           {useVideo && (
             <video
-              ref={videoRef}
-              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out"
-              style={{ filter: GRADE_FILTER, opacity: videoReady ? 1 : 0 }}
+            ref={videoRef}
+            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out"
+            style={{ opacity: videoReady ? 1 : 0 }}
               src={heroMedia.videoSrc}
               poster={heroMedia.imageSrc}
               autoPlay

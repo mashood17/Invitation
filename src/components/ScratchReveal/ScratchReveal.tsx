@@ -195,10 +195,9 @@ function useScratchCanvas(active: boolean, onThreshold: () => void) {
 /* ----------------------------------------------------------------------- */
 
 const writeCharVariant: Variants = {
-  hidden: { opacity: 0, filter: 'blur(2.5px)', y: 8 },
+  hidden: { opacity: 0, y: 8 },
   visible: (delay: number) => ({
     opacity: 1,
-    filter: 'blur(0px)',
     y: 0,
     transition: { duration: 0.32, delay, ease: luxuryEase },
   }),
@@ -336,21 +335,21 @@ export function ScratchReveal() {
 
        <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-col items-center">
           <h2 className="font-script text-3xl text-gold-dark md:text-4xl">
-            <WriteOnHeading text="Unveil the Celebration" delay={0.2} />
+            <WriteOnHeading text="Unveil the Celebration" delay={0.1} />
           </h2>
 
           <motion.div
             className="invitation-divider mt-4 h-px w-20"
             initial={{ width: 0, opacity: 0 }}
             animate={inView ? { width: 80, opacity: 1 } : { width: 0, opacity: 0 }}
-            transition={{ duration: 0.8, delay: 0.9, ease: luxuryEase }}
+            transition={{ duration: 0.5, delay: 0.4, ease: luxuryEase }}
           />
 
           <motion.p
             className="mt-2 font-serif text-sm italic text-ink/60"
             initial={{ opacity: 0, y: 6 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-            transition={{ duration: 0.8, delay: 1.1, ease: luxuryEase }}
+            transition={{ duration: 0.5, delay: 0.5, ease: luxuryEase }}
           >
             Gently reveal your invitation
           </motion.p>
@@ -359,7 +358,7 @@ export function ScratchReveal() {
             className="relative mt-6 w-full"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 1, delay: 1.3, ease: luxuryEase }}
+            transition={{ duration: 0.6, delay: 0.6, ease: luxuryEase }}
           >
             <motion.div
               ref={containerRef}

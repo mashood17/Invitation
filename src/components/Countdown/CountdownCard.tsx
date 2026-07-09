@@ -18,12 +18,12 @@ export function CountdownCard({ value, label }: CountdownCardProps) {
         <AnimatePresence mode="popLayout">
           <motion.p
             key={display}
-            initial={{ y: 14, opacity: 0, filter: 'blur(3px)' }}
-            animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-            exit={{ y: -14, opacity: 0, filter: 'blur(3px)' }}
+            initial={{ y: 14, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -14, opacity: 0 }}
             transition={{ duration: 0.45, ease: luxuryEase }}
             className="absolute inset-x-0 font-display text-3xl font-medium text-ink md:text-4xl max-[360px]:text-2xl"
-          >
+            >
             {display}
           </motion.p>
         </AnimatePresence>
