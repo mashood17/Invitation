@@ -3,6 +3,14 @@
 // component — always import it from here. This is what separates a
 // maintainable invite from a template you're afraid to edit later.
 
+import { ArrivalIcon, NikahIcon, LunchIcon } from '@/config/timelineIcons';
+
+export const timeline = [
+  { label: 'Guest Arrival', time: '10:45 AM', icon: ArrivalIcon, emphasis: false },
+  { label: 'Nikah', time: '11:30 AM', icon: NikahIcon, emphasis: true },
+  { label: 'Lunch', time: 'Immediately After Nikah', icon: LunchIcon, emphasis: false },
+];
+
 export const couple = {
   brideName: 'Ayshath Afra',
   groomName: 'Muhammad Ibrahim Swafwan',
@@ -33,11 +41,6 @@ export const rsvp = {
   callNumber: '+91XXXXXXXXXX',
 };
 
-export const timeline = [
-  { label: 'Guest Arrival', time: '10:45 AM' },
-  { label: 'Nikah', time: '11:30 AM' },
-  { label: 'Lunch', time: 'Immediately After Nikah' },
-];
 
 export const audio = {
   src: '/audio/bismillah.mp4',

@@ -1,0 +1,26 @@
+.countdown-card {
+  position: relative;
+  background: linear-gradient(180deg, #FBF7EF 0%, #F2EAD6 100%);
+  border: 1px solid rgba(198, 161, 91, 0.35);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 10px 22px -14px rgba(43, 38, 32, 0.28);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+.countdown-card:hover {
+  border-color: rgba(198, 161, 91, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 16px 26px -14px rgba(43, 38, 32, 0.22);
+}
+
+.countdown-card-emboss {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, transparent 20%),
+    radial-gradient(circle at 28% 18%, rgba(255, 250, 230, 0.4), transparent 55%);
+}

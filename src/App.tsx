@@ -5,7 +5,6 @@ import { OpeningSequence } from '@/components/OpeningSequence/OpeningSequence';
 import { Hero } from '@/components/Hero/Hero';
 import { InvitationMessage } from '@/components/InvitationMessage/InvitationMessage';
 import { ScratchReveal } from '@/components/ScratchReveal/ScratchReveal';
-import { Gallery } from '@/components/Gallery/Gallery';
 import { Countdown } from '@/components/Countdown/Countdown';
 import { Timeline } from '@/components/Timeline/Timeline';
 import { Venue } from '@/components/Venue/Venue';

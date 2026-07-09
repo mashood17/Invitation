@@ -67,7 +67,7 @@ export function HeroVideo({ parallaxY }: HeroVideoProps) {
             src={heroMedia.imageSrc}
             alt=""
             aria-hidden="true"
-            fetchpriority="high"
+            fetchPriority="high"
             loading="eager"
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover"

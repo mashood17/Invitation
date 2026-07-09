@@ -3,7 +3,6 @@ import { motion, AnimatePresence, useInView, type Variants } from 'framer-motion
 import { PageCelebration } from '@/components/shared/PageCelebration';
 import { SectionWrapper } from '@/components/shared/SectionWrapper';
 import { event } from '@/config/weddingData';
-import { InvitationAtmosphere } from '@/components/InvitationMessage/InvitationAtmosphere';
 import '@/components/InvitationMessage/invitation.css';
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
