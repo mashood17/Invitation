@@ -24,17 +24,20 @@ export function useAudio(src: string) {
     return audioRef.current;
   }, [src]);
 
+  // Volume fading works on Android/desktop but iOS Safari ignores
+  // audio.volume entirely — this is harmless there, not the actual
+  // mute mechanism, just a nicer transition where the platform allows it.
   const fadeVolume = useCallback((target: number, duration = 800) => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const myFadeId = ++fadeId.current; // cancels any fade already in flight
+    const myFadeId = ++fadeId.current;
     const start = audio.volume;
     const startTime = performance.now();
     const clampedTarget = Math.min(1, Math.max(0, target));
 
     function step(now: number) {
-      if (myFadeId !== fadeId.current) return; // a newer fade superseded this one
+      if (myFadeId !== fadeId.current) return;
       const progress = Math.min((now - startTime) / duration, 1);
       const value = start + (clampedTarget - start) * progress;
       audio!.volume = Math.min(1, Math.max(0, value));
@@ -43,8 +46,15 @@ export function useAudio(src: string) {
     requestAnimationFrame(step);
   }, []);
 
+  const applyMuteState = useCallback((muted: boolean) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = muted; // the actual mechanism — respected on iOS AND Android
+  }, []);
+
   const unlock = useCallback(async () => {
     const audio = getAudio();
+    audio.muted = isMuted;
     try {
       await audio.play();
       setIsPlaying(true);
@@ -58,17 +68,18 @@ export function useAudio(src: string) {
     setIsMuted((prev) => {
       const next = !prev;
       localStorage.setItem(MUTE_STORAGE_KEY, String(next));
+      applyMuteState(next);
       fadeVolume(next ? 0 : volume, 400);
       return next;
     });
-  }, [fadeVolume, volume]);
+  }, [applyMuteState, fadeVolume, volume]);
 
   const setVolume = useCallback(
     (v: number) => {
       const clamped = Math.min(1, Math.max(0, v));
       setVolumeState(clamped);
       if (!isMuted && audioRef.current) {
-        audioRef.current.volume = clamped; // immediate, no fade — sliders need live feedback
+        audioRef.current.volume = clamped; // no-op on iOS, works on Android/desktop
       }
     },
     [isMuted],
