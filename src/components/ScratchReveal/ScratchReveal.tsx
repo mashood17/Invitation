@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence, useInView, type Variants } from 'framer-motion';
-
+import { PageCelebration } from '@/components/shared/PageCelebration';
 import { SectionWrapper } from '@/components/shared/SectionWrapper';
 import { event } from '@/config/weddingData';
 import { InvitationAtmosphere } from '@/components/InvitationMessage/InvitationAtmosphere';
@@ -294,12 +294,16 @@ export function ScratchReveal() {
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [celebrationKey, setCelebrationKey] = useState(0);
+  const [showPageCelebration, setShowPageCelebration] = useState(false);
+
 
   const handleThreshold = useCallback(() => {
-    setPhase('dissolving');
-    setCelebrationKey((k) => k + 1);
-    window.setTimeout(() => setPhase('revealed'), DISSOLVE_DURATION_MS);
-  }, []);
+  setPhase('dissolving');
+  setCelebrationKey((k) => k + 1);
+  window.setTimeout(() => setPhase('revealed'), DISSOLVE_DURATION_MS);
+  setShowPageCelebration(true);
+  window.setTimeout(() => setShowPageCelebration(false), 4200);
+}, []);
 
   const { canvasRef, containerRef, onPointerDown, onPointerMove, onPointerUp } = useScratchCanvas(
     phase === 'idle' || phase === 'scratching',
@@ -460,6 +464,7 @@ export function ScratchReveal() {
             )}
           </AnimatePresence>
         </div>
+        {showPageCelebration && <PageCelebration />}
       </div>
     </SectionWrapper>
   );

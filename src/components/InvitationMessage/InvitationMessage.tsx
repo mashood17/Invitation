@@ -78,7 +78,7 @@ export function InvitationMessage() {
   const inView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <SectionWrapper className="relative overflow-hidden bg-ivory px-6 pb-32 pt-8">
+    <SectionWrapper className="relative overflow-hidden bg-ivory px-6 pt-10 pb-10">
       {/* Seam bridge — dissolves the Hero's darkness into ivory instead of cutting to it */}
       <div className="pointer-events-none absolute inset-x-0 -top-1 h-40" aria-hidden="true">
         <div className="invitation-bridge h-full w-full" />
