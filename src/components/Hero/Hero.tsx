@@ -1,72 +1,121 @@
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
 import { couple } from '@/config/weddingData';
+import { HeroVideo } from './HeroVideo';
+import { HeroAtmosphere } from './HeroAtmosphere';
 
-const container = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.18, delayChildren: 1.4 },
-  },
-};
+const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] } },
-};
+function WriteOnText({
+  text,
+  className,
+  delay = 0,
+}: {
+  text: string;
+  className: string;
+  delay?: number;
+}) {
+  const letters = text.split('');
+  return (
+    <span className={className}>
+      {letters.map((char, i) => (
+        <motion.span
+          key={i}
+          className="inline-block"
+          initial={{ opacity: 0, filter: 'blur(4px)', letterSpacing: '0.3em' }}
+          animate={{ opacity: 1, filter: 'blur(0px)', letterSpacing: '0em' }}
+          transition={{
+            duration: 0.6,
+            delay: delay + i * 0.045,
+            ease: luxuryEase,
+          }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
 
 export function Hero() {
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center gap-7 overflow-hidden px-6 text-center">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/images/hero-balcony.jpg')" }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-ink/65 via-ink/30 to-ink/65" />
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-8 overflow-hidden px-6 text-center">
+      <HeroVideo />
+      <HeroAtmosphere />
 
-      <motion.div
-        className="relative z-10 flex flex-col items-center gap-6"
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        <motion.p variants={fadeUp} className="font-display text-4xl text-gold-light drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]">
+      <div className="relative z-10 flex flex-col items-center gap-7">
+        <motion.p
+          className="font-display text-4xl text-gold-light"
+          style={{ textShadow: '0 0 18px rgba(240,206,126,0.55), 0 2px 6px rgba(0,0,0,0.7)' }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.3, ease: luxuryEase }}
+        >
           ﷽
         </motion.p>
 
-        <motion.p variants={fadeUp} className="max-w-xs font-serif text-base italic text-ivory drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+        <motion.p
+          className="max-w-xs font-serif text-base italic text-ivory drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 1.1, ease: luxuryEase }}
+        >
           In the Name of Allah, The Most Gracious, The Most Merciful
         </motion.p>
 
-        <motion.div variants={fadeUp} className="divider">
-          <Heart size={13} className="fill-gold-light text-gold-light drop-shadow" />
-        </motion.div>
+        <motion.div
+          className="h-px bg-gold/60"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 1, delay: 1.7, ease: luxuryEase }}
+        />
 
-        <motion.p variants={fadeUp} className="max-w-sm font-serif text-base italic text-ivory/95 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+        <motion.p
+          className="max-w-sm font-serif text-base italic text-ivory/95 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 2.1, ease: luxuryEase }}
+        >
           We are honoured to welcome you to the wedding ceremony of
         </motion.p>
 
-        <motion.div variants={fadeUp} className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 pt-2">
           <h1 className="font-display text-5xl italic leading-tight text-ivory drop-shadow-[0_3px_10px_rgba(0,0,0,0.75)] md:text-6xl">
-            {couple.brideName}
+            <WriteOnText text={couple.brideName} className="" delay={2.7} />
           </h1>
-          <p className="font-sans text-xs font-medium uppercase tracking-[0.25em] text-gold-light drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+          <motion.p
+            className="font-sans text-xs font-medium uppercase tracking-[0.25em] text-gold-light drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 3.6, ease: luxuryEase }}
+          >
             {couple.brideParents}
-          </p>
-        </motion.div>
+          </motion.p>
+        </div>
 
-        <motion.span variants={fadeUp} className="font-script text-4xl text-gold-light drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]">
+        <motion.span
+          className="font-script text-4xl text-gold-light"
+          style={{ textShadow: '0 0 14px rgba(240,206,126,0.5)' }}
+          initial={{ opacity: 0, rotate: -25, scale: 0.6 }}
+          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 4.0, ease: luxuryEase }}
+        >
           &amp;
         </motion.span>
 
-        <motion.div variants={fadeUp} className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2">
           <h1 className="font-display text-5xl italic leading-tight text-ivory drop-shadow-[0_3px_10px_rgba(0,0,0,0.75)] md:text-6xl">
-            {couple.groomName}
+            <WriteOnText text={couple.groomName} className="" delay={4.4} />
           </h1>
-          <p className="font-sans text-xs font-medium uppercase tracking-[0.25em] text-gold-light drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+          <motion.p
+            className="font-sans text-xs font-medium uppercase tracking-[0.25em] text-gold-light drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 5.6, ease: luxuryEase }}
+          >
             {couple.groomParents}
-          </p>
-        </motion.div>
-      </motion.div>
+          </motion.p>
+        </div>
+      </div>
     </div>
   );
 }

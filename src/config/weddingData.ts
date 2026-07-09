@@ -56,7 +56,7 @@ export const galleryImages = [
 ];
 
 export const heroMedia = {
-  type: 'image' as 'image' | 'video',
-  src: '/images/hero-balcony.jpg',
-  overlayOpacity: 0.35,
+  videoSrc: '/videos/hero.MP4', // e.g. '/videos/hero.mp4' — leave empty to use image only
+  imageSrc: '/images/hero-balcony.jpg',
 };
+

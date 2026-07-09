@@ -11,24 +11,23 @@ import { Timeline } from '@/components/Timeline/Timeline';
 import { Venue } from '@/components/Venue/Venue';
 import { RSVP } from '@/components/RSVP/RSVP';
 import { Closing } from '@/components/Closing/Closing';
+import { MusicControl } from '@/components/shared/MusicControl';
 import { useAudio } from '@/hooks/useAudio';
 import { audio } from '@/config/weddingData';
 
-// App state machine — this is the whole "story" of the page in one type.
-// Every screen the guest sees maps to exactly one of these states.
 type Stage = 'loading' | 'sealed' | 'opening' | 'revealed';
 
 function App() {
   const [stage, setStage] = useState<Stage>('loading');
-  const { unlock } = useAudio(audio.src, audio.defaultVolume);
+  const { unlock, toggleMute, isMuted } = useAudio(audio.src, audio.defaultVolume);
 
   useEffect(() => {
-    const t = setTimeout(() => setStage('sealed'), 900); // loader is capped under 1s per brief
+    const t = setTimeout(() => setStage('sealed'), 900);
     return () => clearTimeout(t);
   }, []);
 
   const handleSealTap = () => {
-    unlock(); // must run inside this synchronous click handler — see useAudio.ts
+    unlock();
     setStage('opening');
   };
 
@@ -45,16 +44,19 @@ function App() {
       )}
 
       {stage === 'revealed' && (
-        <main>
-          <InvitationMessage />
-          <ScratchReveal />
-          <Gallery />
-          <Countdown />
-          <Timeline />
-          <Venue />
-          <RSVP />
-          <Closing />
-        </main>
+        <>
+          <MusicControl isMuted={isMuted} onToggle={toggleMute} />
+          <main>
+            <InvitationMessage />
+            <ScratchReveal />
+            <Gallery />
+            <Countdown />
+            <Timeline />
+            <Venue />
+            <RSVP />
+            <Closing />
+          </main>
+        </>
       )}
     </>
   );
