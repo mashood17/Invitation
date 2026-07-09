@@ -49,7 +49,6 @@ function App() {
           <main>
             <InvitationMessage />
             <ScratchReveal />
-            <Gallery />
             <Countdown />
             <Timeline />
             <Venue />

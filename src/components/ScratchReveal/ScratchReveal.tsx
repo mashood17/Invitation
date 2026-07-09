@@ -1,195 +1,466 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence, useInView, type Variants } from 'framer-motion';
+
 import { SectionWrapper } from '@/components/shared/SectionWrapper';
 import { event } from '@/config/weddingData';
+import { InvitationAtmosphere } from '@/components/InvitationMessage/InvitationAtmosphere';
+import '@/components/InvitationMessage/invitation.css';
 
-/**
- * Real scratch mechanic: a <canvas> painted gold sits ON TOP of the
- * revealed content underneath. Pointer-move events with globalCompositeOperation
- * 'destination-out' erase the gold layer wherever the finger/mouse drags —
- * that's the actual trick every scratch-card implementation uses, there's
- * no shortcut library doing anything smarter than this.
- *
- * We sample pixel alpha data every few strokes to compute % scratched.
- * Past 70%, we fire the confetti burst and fade the canvas out entirely
- * so the reveal reads as fully clean, not "half scratched forever."
- */
-export function ScratchReveal() {
+const luxuryEase = [0.16, 1, 0.3, 1] as const;
+
+const REVEAL_THRESHOLD = 0.32;
+const SCRATCH_RADIUS = 30;
+const SAMPLE_STRIDE = 16;
+const DISSOLVE_DURATION_MS = 900;
+
+type Phase = 'idle' | 'scratching' | 'dissolving' | 'revealed';
+
+/* ----------------------------------------------------------------------- */
+/* useScratchCanvas                                                         */
+/* ----------------------------------------------------------------------- */
+
+function useScratchCanvas(active: boolean, onThreshold: () => void) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isDrawing = useRef(false);
-  const [revealed, setRevealed] = useState(false);
-  const [confettiKey, setConfettiKey] = useState(0);
+  const lastPoint = useRef<{ x: number; y: number } | null>(null);
+  const drawing = useRef(false);
+  const rafPending = useRef(false);
+  const thresholdFired = useRef(false);
 
+  const paintFoil = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    if (w === 0 || h === 0) return;
+    ctx.clearRect(0, 0, w, h);
+
+    const metal = ctx.createLinearGradient(0, 0, w, h);
+    metal.addColorStop(0, '#EFDCA8');
+    metal.addColorStop(0.3, '#DCB96C');
+    metal.addColorStop(0.6, '#C6A15B');
+    metal.addColorStop(1, '#9C7B3E');
+    ctx.fillStyle = metal;
+    ctx.fillRect(0, 0, w, h);
+
+    // Faint brushed grain — quiet, not a repeating pattern.
+    ctx.save();
+    ctx.globalAlpha = 0.05;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 0.6;
+    for (let i = 0; i < w + h; i += 4) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i - h, h);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Soft inner sheen, like light catching pressed foil.
+    const sheen = ctx.createRadialGradient(w * 0.28, h * 0.22, 0, w * 0.28, h * 0.22, w * 0.65);
+    sheen.addColorStop(0, 'rgba(255,250,230,0.25)');
+    sheen.addColorStop(1, 'rgba(255,250,230,0)');
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.fillStyle = 'rgba(255,252,242,0.92)';
+    ctx.font = '600 13px "Poppins", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✦  Scratch to Reveal  ✦', w / 2, h / 2);
+  }, []);
+
+  // ResizeObserver replaces a single mount-time getBoundingClientRect() read,
+  // which could fire before layout (fonts, motion wrappers) had settled and
+  // leave the canvas painted at 0×0 — i.e. permanently invisible.
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      paintGoldLayer(ctx, rect.width, rect.height);
+    const paint = (width: number, height: number) => {
+      if (width === 0 || height === 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      paintFoil(ctx, width, height);
     };
 
-    function paintGoldLayer(c: CanvasRenderingContext2D, w: number, h: number) {
-      const gradient = c.createLinearGradient(0, 0, w, h);
-      gradient.addColorStop(0, '#E4CE9E');
-      gradient.addColorStop(0.5, '#C6A15B');
-      gradient.addColorStop(1, '#9C7B3E');
-      c.fillStyle = gradient;
-      c.fillRect(0, 0, w, h);
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      paint(width, height);
+    });
+    observer.observe(container);
 
-      c.fillStyle = 'rgba(255,255,255,0.9)';
-      c.font = '600 14px Poppins, sans-serif';
-      c.textAlign = 'center';
-      c.fillText('✦ Scratch to Reveal ✦', w / 2, h / 2);
-    }
+    requestAnimationFrame(() => {
+    const rect = container.getBoundingClientRect();
+    paint(rect.width, rect.height);
+});
 
-    resize();
-    window.addEventListener('resize', resize);
-    return () => window.removeEventListener('resize', resize);
-  }, []);
+    return () => observer.disconnect();
+  }, [paintFoil]);
 
-  const getPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const rect = canvasRef.current!.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  };
-
-  const scratch = (x: number, y: number) => {
+  const measureProgress = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
+    if (!canvas || !ctx || thresholdFired.current) return;
 
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    ctx.arc(x, y, 28, 0, Math.PI * 2);
-    ctx.fill();
-  };
-
-  const checkProgress = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx || revealed) return;
-
-    // Sample every 4th pixel for performance — full-resolution alpha
-    // scanning on every stroke would be needlessly expensive.
     const { width, height } = canvas;
+    if (width === 0 || height === 0) return;
     const data = ctx.getImageData(0, 0, width, height).data;
     let cleared = 0;
     let total = 0;
-    for (let i = 3; i < data.length; i += 4 * 4) {
+    const stride = SAMPLE_STRIDE * 4;
+    for (let i = 3; i < data.length; i += stride) {
       total++;
       if (data[i] === 0) cleared++;
     }
 
-    if (total > 0 && cleared / total > 0.7) {
-      setRevealed(true);
-      setConfettiKey((k) => k + 1);
+    if (total > 0 && cleared / total >= REVEAL_THRESHOLD) {
+      thresholdFired.current = true;
+      onThreshold();
     }
-  };
+  }, [onThreshold]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    isDrawing.current = true;
-    const { x, y } = getPos(e);
-    scratch(x, y);
-  };
+  const scheduleMeasure = useCallback(() => {
+    if (rafPending.current || thresholdFired.current) return;
+    rafPending.current = true;
+    requestAnimationFrame(() => {
+      rafPending.current = false;
+      measureProgress();
+    });
+  }, [measureProgress]);
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawing.current) return;
-    const { x, y } = getPos(e);
-    scratch(x, y);
-  };
+  const scratchTo = useCallback((x: number, y: number) => {
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    ctx.globalCompositeOperation = 'destination-out';
 
-  const handlePointerUp = () => {
-    isDrawing.current = false;
-    checkProgress();
-  };
+    const prev = lastPoint.current;
+    if (prev) {
+      const dist = Math.hypot(x - prev.x, y - prev.y);
+      const steps = Math.max(1, Math.ceil(dist / (SCRATCH_RADIUS * 0.35)));
+      for (let i = 1; i <= steps; i++) {
+        const ix = prev.x + ((x - prev.x) * i) / steps;
+        const iy = prev.y + ((y - prev.y) * i) / steps;
+        ctx.beginPath();
+        ctx.arc(ix, iy, SCRATCH_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      ctx.beginPath();
+      ctx.arc(x, y, SCRATCH_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    lastPoint.current = { x, y };
+  }, []);
 
+  const getPos = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }, []);
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (!active) return;
+      drawing.current = true;
+      const { x, y } = getPos(e);
+      scratchTo(x, y);
+      scheduleMeasure();
+    },
+    [active, getPos, scratchTo, scheduleMeasure],
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (!active || !drawing.current) return;
+      const { x, y } = getPos(e);
+      scratchTo(x, y);
+      scheduleMeasure();
+    },
+    [active, getPos, scratchTo, scheduleMeasure],
+  );
+
+  const onPointerUp = useCallback(() => {
+    drawing.current = false;
+    lastPoint.current = null;
+    scheduleMeasure();
+  }, [scheduleMeasure]);
+
+  return { canvasRef, containerRef, onPointerDown, onPointerMove, onPointerUp };
+}
+
+/* ----------------------------------------------------------------------- */
+/* Small presentational pieces                                             */
+/* ----------------------------------------------------------------------- */
+
+const writeCharVariant: Variants = {
+  hidden: { opacity: 0, filter: 'blur(2.5px)', y: 8 },
+  visible: (delay: number) => ({
+    opacity: 1,
+    filter: 'blur(0px)',
+    y: 0,
+    transition: { duration: 0.32, delay, ease: luxuryEase },
+  }),
+};
+
+function WriteOnHeading({ text, delay = 0 }: { text: string; delay?: number }) {
+  let i = 0;
   return (
-    <SectionWrapper className="bg-cream px-6 py-24 text-center">
-      <h2 className="section-heading mb-8">Scratch to Reveal</h2>
-
-      <div
-        ref={containerRef}
-        className="relative mx-auto h-40 w-full max-w-sm overflow-hidden rounded-xl shadow-lg"
-      >
-        {/* Content underneath — always in the DOM, revealed as canvas erases */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-ivory">
-          <p className="font-script text-xl text-gold-dark">You're Invited</p>
-          <p className="font-display text-lg text-ink">
-            {event.dayName}, {event.dateDisplay}
-          </p>
-          <p className="font-serif text-sm text-ink/70">Nikah · {event.nikahTime}</p>
-          <p className="font-sans text-xs uppercase tracking-widest text-ink/50">
-            {event.venueName}, {event.venueAddress}
-          </p>
-        </div>
-
-        {/* Gold scratch layer, fades away once threshold is crossed */}
-        <AnimatePresence>
-          {!revealed && (
-            <motion.canvas
-              ref={canvasRef}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 h-full w-full touch-none"
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-
-      {revealed && <ConfettiBurst key={confettiKey} />}
-    </SectionWrapper>
+    <span>
+      {text.split(' ').map((word, wi) => (
+        <span key={wi} className="mr-[0.28em] inline-block whitespace-nowrap">
+          {word.split('').map((char, ci) => {
+            const idx = i++;
+            return (
+              <motion.span
+                key={ci}
+                className="inline-block"
+                variants={writeCharVariant}
+                initial="hidden"
+                animate="visible"
+                custom={delay + idx * 0.025}
+              >
+                {char}
+              </motion.span>
+            );
+          })}
+        </span>
+      ))}
+    </span>
   );
 }
 
-/**
- * Lightweight confetti — plain divs animated with Framer Motion, no
- * canvas-confetti dependency needed for ~24 particles. Cleans itself
- * up after the animation via `onAnimationComplete` isn't wired here on
- * purpose: leaving the burst mounted is cheap, and removing it risks a
- * layout flash. If you want it to fully unmount later, lift `revealed`
- * state up and gate this on a `showConfetti` timeout instead.
- */
-function ConfettiBurst() {
-  const pieces = Array.from({ length: 24 });
-  const colors = ['#C6A15B', '#E4CE9E', '#0D2B24', '#FBF7EF'];
+function CrescentMotif() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-5 w-5 text-[#C49A54]/70" fill="none">
+      <path d="M20 4a12 12 0 1 0 0 24 9.5 9.5 0 0 1 0-24z" fill="currentColor" opacity="0.75" />
+    </svg>
+  );
+}
+
+/** Restrained champagne celebration — a dozen soft particles drifting
+ *  upward, gone in under two seconds. No party colors, no burst. */
+function ChampagneCelebration() {
+  const palette = ['#D9B872', '#C6A15B', '#FBF7EF', '#EFE6D3'];
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 12 }).map((_, i) => ({
+        id: i,
+        left: 32 + Math.random() * 36,
+        size: 4 + Math.random() * 5,
+        drift: (Math.random() - 0.5) * 50,
+        rise: 130 + Math.random() * 70,
+        duration: 1.6 + Math.random() * 0.6,
+        delay: Math.random() * 0.2,
+        color: palette[i % palette.length],
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   return (
-    <div className="pointer-events-none absolute inset-0 mx-auto max-w-sm overflow-visible">
-      {pieces.map((_, i) => {
-        const startX = 50 + (Math.random() * 40 - 20);
-        const endX = startX + (Math.random() * 60 - 30);
-        const rotate = Math.random() * 360;
-        return (
-          <motion.span
-            key={i}
-            className="absolute h-2 w-2 rounded-sm"
-            style={{
-              left: `${startX}%`,
-              top: '40%',
-              backgroundColor: colors[i % colors.length],
-            }}
-            initial={{ opacity: 1, y: 0, rotate: 0 }}
-            animate={{
-              opacity: 0,
-              y: 220 + Math.random() * 80,
-              x: `${endX - startX}%`,
-              rotate,
-            }}
-            transition={{ duration: 1.4 + Math.random() * 0.6, ease: 'easeOut' }}
-          />
-        );
-      })}
+    <div className="
+        absolute
+        left-1/2
+        top-1/2
+        -translate-x-1/2
+        -translate-y-1/2
+        pointer-events-none
+        overflow-visible
+">
+      {pieces.map((p) => (
+        <motion.span
+          key={p.id}
+          className="absolute rounded-full"
+          style={{ left: `${p.left}%`, top: '55%', width: p.size, height: p.size, backgroundColor: p.color }}
+          initial={{ opacity: 0.9, y: 0, x: 0 }}
+          animate={{ opacity: 0, y: -p.rise, x: p.drift }}
+          transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
+        />
+      ))}
     </div>
+  );
+}
+
+/* ----------------------------------------------------------------------- */
+/* ScratchReveal                                                            */
+/* ----------------------------------------------------------------------- */
+
+export function ScratchReveal() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(sectionRef, { once: true, margin: '-100px' });
+
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [celebrationKey, setCelebrationKey] = useState(0);
+
+  const handleThreshold = useCallback(() => {
+    setPhase('dissolving');
+    setCelebrationKey((k) => k + 1);
+    window.setTimeout(() => setPhase('revealed'), DISSOLVE_DURATION_MS);
+  }, []);
+
+  const { canvasRef, containerRef, onPointerDown, onPointerMove, onPointerUp } = useScratchCanvas(
+    phase === 'idle' || phase === 'scratching',
+    handleThreshold,
+  );
+
+  const handleFirstTouch = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (phase === 'idle') setPhase('scratching');
+      onPointerDown(e);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [phase, onPointerDown],
+  );
+
+  return (
+    <SectionWrapper className="relative overflow-hidden bg-ivory px-6 pt-8 pb-10">
+      <div ref={sectionRef} className="relative w-full">
+        {/* Seam bridge — softens the cut from Invitation Message instead of a hard edge */}
+        <div className="pointer-events-none absolute inset-x-0 -top-1 h-24" aria-hidden="true">
+          <div className="h-full w-full bg-gradient-to-b from-[#F3E9D6]/1 to-transparent" />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 1.6, ease: luxuryEase }}
+        >
+          
+        </motion.div>
+
+       <div className="relative z-10 mx-auto flex w-full max-w-2xl flex-col items-center">
+          <h2 className="font-script text-3xl text-gold-dark md:text-4xl">
+            <WriteOnHeading text="Unveil the Celebration" delay={0.2} />
+          </h2>
+
+          <motion.div
+            className="invitation-divider mt-4 h-px w-20"
+            initial={{ width: 0, opacity: 0 }}
+            animate={inView ? { width: 80, opacity: 1 } : { width: 0, opacity: 0 }}
+            transition={{ duration: 0.8, delay: 0.9, ease: luxuryEase }}
+          />
+
+          <motion.p
+            className="mt-2 font-serif text-sm italic text-ink/60"
+            initial={{ opacity: 0, y: 6 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={{ duration: 0.8, delay: 1.1, ease: luxuryEase }}
+          >
+            Gently reveal your invitation
+          </motion.p>
+
+          <motion.div
+            className="relative mt-6 w-full"
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 1, delay: 1.3, ease: luxuryEase }}
+          >
+            <motion.div
+              ref={containerRef}
+              animate={
+              phase==="revealed"
+              
+              ?{
+              y:-4,
+              scale:1,
+              }
+              :{
+              y:0,
+              scale:.985
+              }
+              }
+              transition={{
+              duration:.7,
+              ease:luxuryEase
+              }}
+              className="
+                invitation-paper
+                relative
+                isolate
+                mx-auto
+                w-full
+                max-w-lg
+                h-64
+                overflow-hidden
+                rounded-2xl
+                "
+            >
+              <div className="invitation-paper-fiber" aria-hidden="true" />
+              <div className="invitation-paper-emboss" aria-hidden="true" />
+
+              <div className="relative flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+                <CrescentMotif />
+                <p className="font-script text-2xl text-gold-dark">You're Invited</p>
+                <div className="invitation-divider h-px w-16" />
+                <p className="font-display text-2xl text-ink">
+                  {event.dayName}, {event.dateDisplay}
+                </p>
+                <p className="font-serif text-lg text-ink/70">Nikah · {event.nikahTime}</p>
+                <p className="font-sans text-[12px] uppercase tracking-[0.2em] text-ink/50">
+                  {event.venueName}, {event.venueAddress}
+                </p>
+              </div>
+
+              <AnimatePresence>
+                {phase !== 'revealed' && (
+                  <motion.canvas
+                    ref={canvasRef}
+                    className="
+                      absolute
+                      inset-0
+                      z-30
+                      h-full
+                      w-full
+                      touch-none
+                      cursor-pointer
+"
+                    style={{ pointerEvents: phase === 'idle' || phase === 'scratching' ? 'auto' : 'none' }}
+                    exit={{ opacity: 0 }}
+                    animate={
+                      phase === 'dissolving'
+                        ? { opacity: 0,  }
+                        : { opacity: 1, }
+                    }
+                    transition={{ duration: DISSOLVE_DURATION_MS / 1000, ease: luxuryEase }}
+                    onPointerDown={handleFirstTouch}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    onPointerLeave={onPointerUp}
+                  />
+                )}
+              </AnimatePresence>
+
+              {phase === 'revealed' && (
+                <motion.div
+                  className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-[linear-gradient(100deg,transparent,rgba(255,248,224,0.5),transparent)]"
+                  initial={{ x: '0%' }}
+                  animate={{ x: '400%' }}
+                  transition={{ duration: 1, ease: luxuryEase }}
+                />
+              )}
+            </motion.div>
+
+            {phase !== 'idle' && phase !== 'scratching' && <ChampagneCelebration key={celebrationKey} />}
+          </motion.div>
+
+          <AnimatePresence>
+            {(phase === 'idle' || phase === 'scratching') && (
+              <motion.p
+                className="mt-2 font-sans text-[10px] uppercase tracking-[0.25em] text-ink/40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                Drag gently to unveil
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </SectionWrapper>
   );
 }
