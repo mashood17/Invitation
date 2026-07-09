@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: auto; /* Lenis takes over smooth scroll; native must stay off */
+  }
+
+  body {
+    @apply bg-ivory text-ink font-serif antialiased;
+    /* Prevents the rubber-band overscroll flashing white on iOS, breaks immersion */
+    overscroll-behavior-y: none;
+  }
+
+  /* Respect people who've asked their OS for less motion.
+     The brief wants "cinematic" — it should never mean "makes someone dizzy." */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .section-heading {
+    @apply font-script text-gold text-4xl md:text-5xl text-center;
+  }
+
+  .divider {
+    @apply flex items-center justify-center gap-3 text-gold/60;
+  }
+  .divider::before,
+  .divider::after {
+    content: '';
+    @apply h-px w-16 bg-gold/40;
+  }
+}
