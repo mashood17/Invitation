@@ -14,26 +14,47 @@ function WriteOnText({
   className: string;
   delay?: number;
 }) {
-  const letters = text.split('');
-  return (
-    <span className={className}>
-      {letters.map((char, i) => (
-        <motion.span
-          key={i}
-          className="inline-block"
-          initial={{ opacity: 0, filter: 'blur(4px)', letterSpacing: '0.3em' }}
-          animate={{ opacity: 1, filter: 'blur(0px)', letterSpacing: '0em' }}
-          transition={{
-            duration: 0.6,
-            delay: delay + i * 0.045,
-            ease: luxuryEase,
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
-      ))}
-    </span>
-  );
+  const words = text.split(' ');
+let letterIndex = 0;
+
+return (
+  <span className={className}>
+    {words.map((word, wordIndex) => (
+      <span
+        key={wordIndex}
+        className="inline-block whitespace-nowrap mr-[0.25em]"
+      >
+        {word.split('').map((char, i) => {
+          const currentIndex = letterIndex++;
+
+          return (
+            <motion.span
+              key={i}
+              className="inline-block"
+              initial={{
+                opacity: 0,
+                filter: 'blur(4px)',
+                letterSpacing: '0.3em',
+              }}
+              animate={{
+                opacity: 1,
+                filter: 'blur(0px)',
+                letterSpacing: '0em',
+              }}
+              transition={{
+                duration: 0.6,
+                delay: delay + currentIndex * 0.045,
+                ease: luxuryEase,
+              }}
+            >
+              {char}
+            </motion.span>
+          );
+        })}
+      </span>
+    ))}
+  </span>
+);
 }
 
 export function Hero() {
@@ -103,8 +124,18 @@ export function Hero() {
         </motion.span>
 
         <div className="flex flex-col items-center gap-2">
-          <h1 className="font-display text-5xl italic leading-tight text-ivory drop-shadow-[0_3px_10px_rgba(0,0,0,0.75)] md:text-6xl">
-            <WriteOnText text={couple.groomName} className="" delay={4.4} />
+          <h1 className="
+font-display
+italic
+leading-[1.2]
+tracking-normal
+text-[clamp(2.45rem,8vw,4rem)]
+text-ivory
+drop-shadow-[0_3px_10px_rgba(0,0,0,0.75)]
+">
+            <WriteOnText text="Muhammad" className="" delay={4.4} />
+            <br />
+            <WriteOnText text="Ibrahim Swafwan" className="" delay={4.9} />
           </h1>
           <motion.p
             className="font-sans text-xs font-medium uppercase tracking-[0.25em] text-gold-light drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
