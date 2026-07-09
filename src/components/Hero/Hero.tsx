@@ -42,8 +42,8 @@ return (
                 letterSpacing: '0em',
               }}
               transition={{
-                duration: 0.6,
-                delay: delay + currentIndex * 0.045,
+                duration: 0.4,
+                delay: delay + currentIndex * 0.025,
                 ease: luxuryEase,
               }}
             >
@@ -133,9 +133,9 @@ text-[clamp(2.45rem,8vw,4rem)]
 text-ivory
 drop-shadow-[0_3px_10px_rgba(0,0,0,0.75)]
 ">
-            <WriteOnText text="Muhammad" className="" delay={4.4} />
+            <WriteOnText text="Muhammad" className="" delay={3.8} />
             <br />
-            <WriteOnText text="Ibrahim Swafwan" className="" delay={4.9} />
+            <WriteOnText text="Ibrahim Swafwan" className="" delay={4.1} />
           </h1>
           <motion.p
             className="font-sans text-xs font-medium uppercase tracking-[0.25em] text-gold-light drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]"
